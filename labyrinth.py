@@ -70,14 +70,14 @@ class Hero:
 
     def render(self, screen):
         delta = (self.image.get_width() - TILE_SIZE) // 2
-        screen.blit(self.image, (self.x + TILE_SIZE - delta,
-                                 self.y + TILE_SIZE - delta))
+        screen.blit(self.image, (self.x * TILE_SIZE - delta,
+                                 self.y * TILE_SIZE - delta))
 
 
 class Enemy:
     def __init__(self, pic, position):
         self.x, self.y = position
-        self.delay = 100
+        self.delay = 150
         pygame.time.set_timer(ENEMY_EVENT_TYPE, self.delay)
         self.image = pygame.transform.scale(pygame.image.load(f"images/{pic}"), (TILE_SIZE - 5, TILE_SIZE - 5))
 
