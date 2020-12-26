@@ -1,6 +1,7 @@
 import pygame
+import pytmx
 
-WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 480, 480
+WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 672, 608
 FPS = 15
 MAPS_DIR = 'maps'
 TILE_SIZE = 32
@@ -9,29 +10,25 @@ ENEMY_EVENT_TYPE = pygame.USEREVENT + 1
 
 class Labyrinth:
     def __init__(self, filename, free_tile, finish_tile):
-        self.map = []
-        with open(f'{MAPS_DIR}/{filename}') as input_file:
-            for line in input_file:
-                self.map.append(list(map(int, line.split())))
-        self.height = len(self.map)
-        self.width = len(self.map[0])
-        self.tile_size = TILE_SIZE
-        self.free_tles = free_tile
+        self.map = pytmx.load_pygame(f"{MAPS_DIR}/{filename}")
+        self.height = self.map.height
+        self.width = self.map.width
+        self.tile_size = self.map.tilewidth
+        self.free_tiles = free_tile
         self.finish_tile = finish_tile
 
     def render(self, screen):
         colors = {0: (0, 0, 0), 1: (120, 120, 120), 2: (50, 50, 50)}
         for y in range(self.height):
             for x in range(self.width):
-                rect = pygame.Rect(x * self.tile_size, y * self.tile_size,
-                                   self.tile_size, self.tile_size)
-                screen.fill(colors[self.get_tile_id((x, y))], rect)
+                image = self.map.get_tile_image(x, y, 0)
+                screen.blit(image, (x * self.tile_size, y * self.tile_size))
 
     def get_tile_id(self, position):
-        return self.map[position[1]][position[0]]
+        return self.map.tiledgidmap[self.map.get_tile_gid(*position, 0)]
 
     def is_free(self, position):
-        return self.get_tile_id(position) in self.free_tles
+        return self.get_tile_id(position) in self.free_tiles
 
     def find_path_step(self, start, target):
         INF = 1000
@@ -60,7 +57,7 @@ class Labyrinth:
 class Hero:
     def __init__(self, pic, position):
         self.x, self.y = position
-        self.image = pygame.transform.scale(pygame.image.load(f"images/{pic}"), (TILE_SIZE - 5, TILE_SIZE - 5))
+        self.image = pygame.transform.scale(pygame.image.load(f"images/{pic}"), (TILE_SIZE, TILE_SIZE))
 
     def get_position(self):
         return self.x, self.y
@@ -79,7 +76,7 @@ class Enemy:
         self.x, self.y = position
         self.delay = 150
         pygame.time.set_timer(ENEMY_EVENT_TYPE, self.delay)
-        self.image = pygame.transform.scale(pygame.image.load(f"images/{pic}"), (TILE_SIZE - 5, TILE_SIZE - 5))
+        self.image = pygame.transform.scale(pygame.image.load(f"images/{pic}"), (TILE_SIZE, TILE_SIZE))
 
     def get_position(self):
         return self.x, self.y
@@ -146,9 +143,9 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
 
-    labyrinth = Labyrinth('simple_map.txt', [0, 2], 2)
-    hero = Hero('hero.png', (7, 7))
-    enemy = Enemy('enemy.png', (7, 1))
+    labyrinth = Labyrinth('map1.tmx', [30, 46], 46)
+    hero = Hero('hero.png', (10, 9))
+    enemy = Enemy('enemy.png', (19, 9))
     game = Game(labyrinth, hero, enemy)
 
     clock = pygame.time.Clock()
